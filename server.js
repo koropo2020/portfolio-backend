@@ -1,14 +1,13 @@
-
 const express = require("express");
 const cors = require("cors");
 const nodemailer = require("nodemailer");
 require("dotenv").config();
 
 const app = express();
-app.use(express.urlencoded({ extended: true }));
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // TEST ROUTE
 app.get("/", (req, res) => {
@@ -21,7 +20,9 @@ app.post("/contact", async (req, res) => {
 
   try {
     let transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -29,8 +30,9 @@ app.post("/contact", async (req, res) => {
     });
 
     await transporter.sendMail({
-      from: email,
+      from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
+      replyTo: email,
       subject: `New Message from ${name}`,
       html: `
         <h3>New Contact Message</h3>
@@ -40,11 +42,18 @@ app.post("/contact", async (req, res) => {
       `
     });
 
-    res.json({ success: true, message: "Email sent successfully ✅" });
+    return res.json({
+      success: true,
+      message: "Email sent successfully ✅"
+    });
 
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false, message: "Failed to send email ❌" });
+    console.log("EMAIL ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to send email ❌"
+    });
   }
 });
 
