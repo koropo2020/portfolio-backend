@@ -1,13 +1,19 @@
 const express = require("express");
 const cors = require("cors");
-const nodemailer = require("nodemailer");
-require("dotenv").config();
+const dotenv = require("dotenv");
+const { Resend } = require("resend");
+
+dotenv.config();
 
 const app = express();
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Init Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // TEST ROUTE
 app.get("/", (req, res) => {
@@ -19,23 +25,13 @@ app.post("/contact", async (req, res) => {
   const { name, email, message } = req.body;
 
   try {
-    let transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
-
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+    const response = await resend.emails.send({
+      from: "Portfolio <onboarding@resend.dev>",
       to: process.env.EMAIL_USER,
-      replyTo: email,
       subject: `New Message from ${name}`,
+      reply_to: email,
       html: `
-        <h3>New Contact Message</h3>
+        <h2>New Contact Message</h2>
         <p><b>Name:</b> ${name}</p>
         <p><b>Email:</b> ${email}</p>
         <p><b>Message:</b> ${message}</p>
@@ -44,7 +40,8 @@ app.post("/contact", async (req, res) => {
 
     return res.json({
       success: true,
-      message: "Email sent successfully ✅"
+      message: "Email sent successfully ✅",
+      data: response
     });
 
   } catch (error) {
@@ -57,6 +54,7 @@ app.post("/contact", async (req, res) => {
   }
 });
 
+// PORT
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
