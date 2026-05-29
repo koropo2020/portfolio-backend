@@ -7,12 +7,12 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
+// MIDDLEWARE
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Init Resend
+// INIT RESEND
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // TEST ROUTE
@@ -22,18 +22,28 @@ app.get("/", (req, res) => {
 
 // CONTACT ROUTE
 app.post("/contact", async (req, res) => {
+
   const { name, email, message } = req.body;
 
   try {
+
     const response = await resend.emails.send({
+
       from: "Portfolio <onboarding@resend.dev>",
+
       to: process.env.EMAIL_USER,
-      subject: `New Message from ${name}`,
+
       reply_to: email,
+
+      subject: `New Message from ${name}`,
+
       html: `
         <h2>New Contact Message</h2>
+
         <p><b>Name:</b> ${name}</p>
+
         <p><b>Email:</b> ${email}</p>
+
         <p><b>Message:</b> ${message}</p>
       `
     });
@@ -45,13 +55,16 @@ app.post("/contact", async (req, res) => {
     });
 
   } catch (error) {
+
     console.log("EMAIL ERROR:", error);
 
     return res.status(500).json({
       success: false,
       message: "Failed to send email ❌"
     });
+
   }
+
 });
 
 // PORT
