@@ -1,9 +1,11 @@
 const express = require("express");
 const cors = require("cors");
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 require("dotenv").config();
 
 const app = express();
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // MIDDLEWARE
 app.use(cors());
@@ -17,59 +19,41 @@ app.get("/", (req, res) => {
 
 // CONTACT ROUTE
 app.post("/contact", async (req, res) => {
-
   const { name, email, message } = req.body;
 
   try {
-
-    const transporter = nodemailer.createTransport({
-
-      service: "gmail",
-
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-
-    });
-
-    await transporter.sendMail({
-
-      from: process.env.EMAIL_USER,
-
+    const data = await resend.emails.send({
+      from: "onboarding@resend.dev",
       to: process.env.EMAIL_USER,
-
-      replyTo: email,
-
       subject: `New Message from ${name}`,
-
       html: `
         <h2>New Contact Message</h2>
 
-        <p><b>Name:</b> ${name}</p>
+        <p><strong>Name:</strong> ${name}</p>
 
-        <p><b>Email:</b> ${email}</p>
+        <p><strong>Email:</strong> ${email}</p>
 
-        <p><b>Message:</b> ${message}</p>
+        <p><strong>Message:</strong></p>
+
+        <p>${message}</p>
       `
     });
 
-    return res.json({
+    console.log("Email sent:", data);
+
+    return res.status(200).json({
       success: true,
       message: "Email sent successfully ✅"
     });
 
   } catch (error) {
-
-    console.log("EMAIL ERROR:", error);
+    console.error("RESEND ERROR:", error);
 
     return res.status(500).json({
       success: false,
       message: "Failed to send email ❌"
     });
-
   }
-
 });
 
 // PORT
