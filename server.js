@@ -23,7 +23,7 @@ app.post("/contact", async (req, res) => {
 
   try {
     const data = await resend.emails.send({
-      from: "onboarding@resend.dev",
+      from: "koroposhafii37@gmail.com",
       to: "koroposhafii37@gmail.com",
       subject: `New Message from ${name}`,
       html: `
